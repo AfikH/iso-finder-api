@@ -1,0 +1,25 @@
+{
+  "name": "discover-iso-api",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "Afik Habaz",
+  "type": "commonjs",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc && tsc-alias -p ./tsconfig.json",
+    "start": "node ./dist/index.js",
+    "dev": "nodemon"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.0",
+    "nodemon": "^3.1.9",
+    "tsc-alias": "^1.8.13",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0"
+  }
+}
