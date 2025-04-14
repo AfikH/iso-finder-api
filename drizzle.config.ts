@@ -4,7 +4,7 @@ import mainConfig from "./src/configs/main.config";
 export default defineConfig({
   out: "./drizzle",
   schema: "./src/db/schema.ts",
-  dialect: "mysql",
+  dialect: "postgresql",
   dbCredentials: {
     url: mainConfig.db.url!,
   },
