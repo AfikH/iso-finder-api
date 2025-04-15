@@ -9,6 +9,7 @@ export const countries = pgTable("countries", {
 export const territories = pgTable("territories", {
   id: serial("territory_id").primaryKey(),
   name: varchar("name", { length: 200 }).unique().notNull(),
+  code: varchar("territory_code", { length: 2 }).unique().notNull(),
   country: integer("country")
     .references(() => countries.id)
     .notNull(),
@@ -17,6 +18,7 @@ export const territories = pgTable("territories", {
 export const cities = pgTable("cities", {
   id: serial("city_id").primaryKey(),
   name: varchar("name", { length: 200 }).unique().notNull(),
+  county: varchar("county", { length: 200 }),
   country: integer("country")
     .references(() => countries.id)
     .notNull(),

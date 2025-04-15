@@ -1,7 +1,7 @@
 import mainConfig from "@configs/main.config";
 import { drizzle } from "drizzle-orm/node-postgres";
 
-const db = () => {
+export const db = () => {
   if (!mainConfig.db.url) {
     console.error("Missing DATABASE_URL env var.(pgsql)");
     throw new Error("Couldn't connect to database.");
