@@ -1,4 +1,7 @@
 import express, { Request, Response } from "express";
+import helmet from "helmet";
+import cors from "cors";
+import hpp from "hpp";
 import "dotenv/config";
 
 import mainConfig from "@configs/main.config";
@@ -9,6 +12,11 @@ const app = express();
 
 // request logging middleware
 app.use(requestLogger);
+
+// protection layer
+app.use(helmet());
+app.use(cors());
+app.use(hpp());
 
 // routes
 app.get("/", (req: Request, res: Response) => {
