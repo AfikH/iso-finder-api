@@ -1,7 +1,7 @@
 import { createSelectSchema } from "drizzle-zod";
-import { cities } from "@db/schema";
+import { citiesTable } from "@db/schema";
 
-export const citySelectSchema = createSelectSchema(cities, {
+export const citySelectSchema = createSelectSchema(citiesTable, {
   name: (schema) => schema.min(1).max(200),
   county: (schema) => schema.min(1).max(200),
 });

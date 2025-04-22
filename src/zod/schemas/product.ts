@@ -1,7 +1,7 @@
 import { createSelectSchema } from "drizzle-zod";
-import { products } from "@db/schema";
+import { productsTable } from "@db/schema";
 
-export const productSelectSchema = createSelectSchema(products, {
+export const productSelectSchema = createSelectSchema(productsTable, {
   name: (schema) => schema.min(1).max(255),
 });
 
