@@ -4,8 +4,8 @@ import { companyCategoriesTable } from "@db/schema";
 import { companyCategory, companyCategoryInsert } from "@zod/schemas/companyCategory";
 
 const get = async (limit: number = 10, offset: number = 0): Promise<companyCategory[]> => {
-  const companies = await db.select().from(companyCategoriesTable).limit(limit).offset(offset);
-  return companies;
+  const companyCategories = await db.select().from(companyCategoriesTable).limit(limit).offset(offset);
+  return companyCategories;
 };
 
 const getOneById = async (id: number): Promise<companyCategory | undefined> => {

@@ -1,32 +1,84 @@
-import { eq } from "drizzle-orm";
-import { db } from "@db/index";
-import { productsTable } from "@db/schema";
-import { product, productInsert } from "@zod/schemas/product";
+import { NextFunction, Request, Response } from "express";
+import { product, productInsert, productInsertSchema } from "@zod/schemas/product";
+import productsService from "@services/products.service";
+import ValidationError from "@errors/ValidationError";
+import { ApiResponse } from "@customTypes/Response.type";
 
-export const get = async (limit: number = 10, offset: number = 0): Promise<product[]> => {
-  const companies = await db.select().from(productsTable).limit(limit).offset(offset);
-  return companies;
+const get = async (req: Request, res: Response<ApiResponse<product[]>>, next: NextFunction) => {
+  try {
+    const products = await productsService.get();
+
+    if (products.length <= 0) {
+      res.status(204).end();
+      return;
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: products,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const getOneById = async (id: number): Promise<product | undefined> => {
-  const [product] = await db.select().from(productsTable).where(eq(productsTable.id, id)).limit(1);
-  return product;
+const getOneById = async (req: Request<{ productId: string }>, res: Response<ApiResponse<product>>, next: NextFunction) => {
+  try {
+    const id = parseInt(req.params.productId) || null;
+    if (!id) throw new ValidationError(400, "Missing url parameter(product id).");
+
+    const product = await productsService.getOneById(id);
+    if (!product) {
+      res.status(204).end();
+      return;
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const createOne = async (data: productInsert): Promise<product> => {
-  // TODO::validate data
+const createOne = async (req: Request<{}, {}, productInsert>, res: Response<ApiResponse<product>>, next: NextFunction) => {
+  try {
+    const productData = productInsertSchema.parse(req.body);
 
-  const [product] = await db.insert(productsTable).values(data).returning();
-  return product;
+    const product = await productsService.createOne(productData);
+
+    res.status(201).json({
+      status: "success",
+      message: "Product has been created succesfully.",
+      data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const updateOneById = async (id: number, data: Partial<productInsert>): Promise<product> => {
-  // TODO::validate data
+const updateOneById = async (
+  req: Request<{ productId: string }, {}, Partial<productInsert>>,
+  res: Response<ApiResponse<product>>,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.productId) || null;
+    if (!id) throw new ValidationError(400, "Missing url parameter(product id).");
 
-  const [product] = await db.update(productsTable).set(data).where(eq(productsTable.id, id)).returning();
-  return product;
+    const productData = productInsertSchema.partial().parse(req.body);
+
+    const product = await productsService.updateOneById(id, productData);
+
+    res.status(201).json({
+      status: "success",
+      message: "Product has been updated succesfully.",
+      data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const deleteOneById = async (id: number): Promise<void> => {
-  await db.delete(productsTable).where(eq(productsTable.id, id));
-};
+export default { get, getOneById, createOne, updateOneById };

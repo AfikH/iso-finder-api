@@ -1,18 +1,19 @@
-import { eq } from "drizzle-orm";
-import { db } from "@db/index";
-import { companiesTable } from "@db/schema";
+import { NextFunction, Request, Response } from "express";
 import { company, companyInsert, companyInsertSchema } from "@zod/schemas/company";
 import companiesService from "@services/companies.service";
-import { NextFunction, Request, Response } from "express";
 import ValidationError from "@errors/ValidationError";
+import { ApiResponse } from "@customTypes/Response.type";
 
-export const get = async (req: Request, res: Response, next: NextFunction) => {
+const get = async (req: Request, res: Response<ApiResponse<company[]>>, next: NextFunction) => {
   try {
     const companies = await companiesService.get();
 
-    if (companies.length <= 0) return res.status(204).end();
+    if (companies.length <= 0) {
+      res.status(204).end();
+      return;
+    }
 
-    return res.status(200).json({
+    res.status(200).json({
       status: "success",
       data: companies,
     });
@@ -21,15 +22,18 @@ export const get = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export const getOneById = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+const getOneById = async (req: Request<{ companyId: string }>, res: Response<ApiResponse<company>>, next: NextFunction) => {
   try {
-    const id = parseInt(req.params.id) || null;
-    if (!id) throw new ValidationError(400, "Missing url parameter(company id)");
+    const id = parseInt(req.params.companyId) || null;
+    if (!id) throw new ValidationError(400, "Missing url parameter(company id).");
 
     const company = await companiesService.getOneById(id);
-    if (!company) return res.status(204).end();
+    if (!company) {
+      res.status(204).end();
+      return;
+    }
 
-    return res.status(200).json({
+    res.status(200).json({
       status: "success",
       data: company,
     });
@@ -38,13 +42,13 @@ export const getOneById = async (req: Request<{ id: string }>, res: Response, ne
   }
 };
 
-export const createOne = async (req: Request<{}, {}, companyInsert>, res: Response, next: NextFunction) => {
+const createOne = async (req: Request<{}, {}, companyInsert>, res: Response<ApiResponse<company>>, next: NextFunction) => {
   try {
     const companyData = companyInsertSchema.parse(req.body);
 
     const company = await companiesService.createOne(companyData);
 
-    return res.status(201).json({
+    res.status(201).json({
       status: "success",
       message: "Company has been created succesfully.",
       data: company,
@@ -54,13 +58,27 @@ export const createOne = async (req: Request<{}, {}, companyInsert>, res: Respon
   }
 };
 
-export const updateOneById = async (id: number, data: Partial<companyInsert>): Promise<company> => {
-  // TODO::validate data
+const updateOneById = async (
+  req: Request<{ companyId: string }, {}, Partial<companyInsert>>,
+  res: Response<ApiResponse<company>>,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.companyId) || null;
+    if (!id) throw new ValidationError(400, "Missing url parameter(company id).");
 
-  const [company] = await db.update(companiesTable).set(data).where(eq(companiesTable.id, id)).returning();
-  return company;
+    const companyData = companyInsertSchema.partial().parse(req.body);
+
+    const company = await companiesService.updateOneById(id, companyData);
+
+    res.status(201).json({
+      status: "success",
+      message: "Company has been updated succesfully.",
+      data: company,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const deleteOneById = async (id: number): Promise<void> => {
-  await db.delete(companiesTable).where(eq(companiesTable.id, id));
-};
+export default { get, getOneById, createOne, updateOneById };

@@ -17,6 +17,7 @@
       "@middlewares/*": ["./middlewares/*"],
       "@routes/*": ["./routes/*"],
       "@services/*": ["./services/*"],
+      "@customTypes/*": ["./customTypes/*"],
       "@utils/*": ["./utils/*"],
       "@zod/*": ["./zod/*"]
     } /* Specify a set of entries that re-map imports to additional lookup locations. */,

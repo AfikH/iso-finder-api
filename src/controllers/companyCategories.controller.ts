@@ -1,32 +1,84 @@
-import { eq } from "drizzle-orm";
-import { db } from "@db/index";
-import { companyCategoriesTable } from "@db/schema";
-import { companyCategory, companyCategoryInsert } from "@zod/schemas/companyCategory";
+import { NextFunction, Request, Response } from "express";
+import ValidationError from "@errors/ValidationError";
+import companyCategoriesService from "@services/companyCategories.service";
+import { companyCategory, companyCategoryInsert, companyCategoryInsertSchema } from "@zod/schemas/companyCategory";
+import { ApiResponse } from "@customTypes/Response.type";
 
-export const get = async (limit: number = 10, offset: number = 0): Promise<companyCategory[]> => {
-  const companies = await db.select().from(companyCategoriesTable).limit(limit).offset(offset);
-  return companies;
+const get = async (req: Request, res: Response<ApiResponse<companyCategory[]>>, next: NextFunction) => {
+  try {
+    const companyCategories = await companyCategoriesService.get();
+
+    if (companyCategories.length <= 0) {
+      res.status(204).end();
+      return;
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: companyCategories,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const getOneById = async (id: number): Promise<companyCategory | undefined> => {
-  const [companyCategory] = await db.select().from(companyCategoriesTable).where(eq(companyCategoriesTable.id, id)).limit(1);
-  return companyCategory;
+const getOneById = async (req: Request<{ companyCategoryId: string }>, res: Response<ApiResponse<companyCategory>>, next: NextFunction) => {
+  try {
+    const id = parseInt(req.params.companyCategoryId) || null;
+    if (!id) throw new ValidationError(400, "Missing url parameter(category id).");
+
+    const companyCategory = await companyCategoriesService.getOneById(id);
+    if (!companyCategory) {
+      res.status(204).end();
+      return;
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: companyCategory,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const createOne = async (data: companyCategoryInsert): Promise<companyCategory> => {
-  // TODO::validate data
+const createOne = async (req: Request<{}, {}, companyCategoryInsert>, res: Response<ApiResponse<companyCategory>>, next: NextFunction) => {
+  try {
+    const companyCategoryData = companyCategoryInsertSchema.parse(req.body);
 
-  const [companyCategory] = await db.insert(companyCategoriesTable).values(data).returning();
-  return companyCategory;
+    const companyCategory = await companyCategoriesService.createOne(companyCategoryData);
+
+    res.status(201).json({
+      status: "success",
+      message: "Category has been created succesfully.",
+      data: companyCategory,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const updateOneById = async (id: number, data: Partial<companyCategoryInsert>): Promise<companyCategory> => {
-  // TODO::validate data
+const updateOneById = async (
+  req: Request<{ companyCategoryId: string }, {}, Partial<companyCategoryInsert>>,
+  res: Response<ApiResponse<companyCategory>>,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.companyCategoryId) || null;
+    if (!id) throw new ValidationError(400, "Missing url parameter(category id).");
 
-  const [companyCategory] = await db.update(companyCategoriesTable).set(data).where(eq(companyCategoriesTable.id, id)).returning();
-  return companyCategory;
+    const companyCategoryData = companyCategoryInsertSchema.partial().parse(req.body);
+
+    const companyCategory = await companyCategoriesService.updateOneById(id, companyCategoryData);
+
+    res.status(201).json({
+      status: "success",
+      message: "Category has been updated succesfully.",
+      data: companyCategory,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const deleteOneById = async (id: number): Promise<void> => {
-  await db.delete(companyCategoriesTable).where(eq(companyCategoriesTable.id, id));
-};
+export default { get, getOneById, createOne, updateOneById };

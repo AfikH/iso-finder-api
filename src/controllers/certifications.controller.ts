@@ -1,17 +1,19 @@
-import { eq } from "drizzle-orm";
-import { db } from "@db/index";
-import { certificationsTable } from "@db/schema";
-import { certification, certificationInsert } from "@zod/schemas/certification";
 import { NextFunction, Request, Response } from "express";
+import { certification, certificationInsert, certificationInsertSchema } from "@zod/schemas/certification";
 import certificationsService from "@services/certifications.service";
+import { ApiResponse } from "@customTypes/Response.type";
+import ValidationError from "@errors/ValidationError";
 
-export const get = async (req: Request, res: Response, next: NextFunction) => {
+export const get = async (req: Request, res: Response<ApiResponse<certification[]>>, next: NextFunction) => {
   try {
     const certifications = await certificationsService.get();
 
-    if (certifications.length <= 0) return res.status(204).end();
+    if (certifications.length <= 0) {
+      res.status(204).end();
+      return;
+    }
 
-    return res.status(200).json({
+    res.status(200).json({
       status: "success",
       data: certifications,
     });
@@ -20,25 +22,63 @@ export const get = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export const getOneById = async (id: number): Promise<certification | undefined> => {
-  const [certification] = await db.select().from(certificationsTable).where(eq(certificationsTable.id, id)).limit(1);
-  return certification;
+const getOneById = async (req: Request<{ certificationId: string }>, res: Response<ApiResponse<certification>>, next: NextFunction) => {
+  try {
+    const id = parseInt(req.params.certificationId) || null;
+    if (!id) throw new ValidationError(400, "Missing url parameter(certification id).");
+
+    const certification = await certificationsService.getOneById(id);
+    if (!certification) {
+      res.status(204).end();
+      return;
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: certification,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const createOne = async (data: certificationInsert): Promise<certification> => {
-  // TODO::validate data
+const createOne = async (req: Request<{}, {}, certificationInsert>, res: Response<ApiResponse<certification>>, next: NextFunction) => {
+  try {
+    const certificationData = certificationInsertSchema.parse(req.body);
 
-  const [certification] = await db.insert(certificationsTable).values(data).returning();
-  return certification;
+    const certification = await certificationsService.createOne(certificationData);
+
+    res.status(201).json({
+      status: "success",
+      message: "Certification has been created succesfully.",
+      data: certification,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const updateOneById = async (id: number, data: Partial<certificationInsert>): Promise<certification> => {
-  // TODO::validate data
+const updateOneById = async (
+  req: Request<{ certificationId: string }, {}, Partial<certificationInsert>>,
+  res: Response<ApiResponse<certification>>,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.certificationId) || null;
+    if (!id) throw new ValidationError(400, "Missing url parameter(certification id).");
 
-  const [certification] = await db.update(certificationsTable).set(data).where(eq(certificationsTable.id, id)).returning();
-  return certification;
+    const certificationData = certificationInsertSchema.partial().parse(req.body);
+
+    const certification = await certificationsService.updateOneById(id, certificationData);
+
+    res.status(201).json({
+      status: "success",
+      message: "Certification has been updated succesfully.",
+      data: certification,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const deleteOneById = async (id: number): Promise<void> => {
-  await db.delete(certificationsTable).where(eq(certificationsTable.id, id));
-};
+export default { get, getOneById, createOne, updateOneById };

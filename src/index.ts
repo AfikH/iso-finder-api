@@ -7,8 +7,15 @@ import "dotenv/config";
 import mainConfig from "@configs/main.config";
 import errorHandler from "@middlewares/errorHandler.middleware";
 import requestLogger from "@middlewares/requestLogger.middleware";
+import certificationsRouter from "@routes/certifications.router";
+import companiesRouter from "@routes/companies.router";
+import companyCategoriesRouter from "@routes/companyCategories.router";
+import productCategoriesRouter from "@routes/productCategories.router";
+import productsRouter from "@routes/products.router";
 
 const app = express();
+
+app.use(express.json());
 
 // request logging middleware
 app.use(requestLogger);
@@ -22,6 +29,12 @@ app.use(hpp());
 app.get("/", (req: Request, res: Response) => {
   res.send("Hay");
 });
+
+app.use("/certifications", certificationsRouter);
+app.use("/companies", companiesRouter);
+app.use("/company-categories", companyCategoriesRouter);
+app.use("/products", productsRouter);
+app.use("/product-categories", productCategoriesRouter);
 
 // error handling middleware
 app.use(errorHandler);
