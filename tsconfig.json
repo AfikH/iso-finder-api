@@ -19,7 +19,8 @@
       "@services/*": ["./services/*"],
       "@customTypes/*": ["./customTypes/*"],
       "@utils/*": ["./utils/*"],
-      "@zod/*": ["./zod/*"]
+      "@zod/*": ["./zod/*"],
+      "@app": ["./app"]
     } /* Specify a set of entries that re-map imports to additional lookup locations. */,
 
     /* Emit */
