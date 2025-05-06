@@ -3,14 +3,15 @@
   "name": "discover-iso-api",
   "version": "1.0.0",
   "author": "Afik Habaz",
-  "type": "module",
+  "type": "commonjs",
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc && tsc-alias -p ./tsconfig.json",
     "start": "node ./dist/server.js",
     "dev": "nodemon",
     "db:push": "drizzle-kit push --config=./drizzle.config.ts",
-    "db:loadDatasets": "node ./seed/loadDatasets.js"
+    "db:loadDatasets": "node ./seed/loadDatasets.js",
+    "db:dropTables": "node ./seed/dropTables.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

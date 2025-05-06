@@ -61,6 +61,7 @@ export const productsTable = pgTable("products", {
   category: integer("category").references(() => productCategoriesTable.id),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
+  company: integer("company").references(() => companiesTable.id),
 });
 
 export const certificationsTable = pgTable("certifications", {
